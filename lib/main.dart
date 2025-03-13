@@ -48,17 +48,23 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
   String? chainName;
   String? walletAddress;
+  bool isLoading = true; // Ban đầu giả định đang tải dữ liệu
 
-  @override
-  void initState() {
+  checkDataAddressWallet() async {
     MyHomePage.walletConnectHelper = WalletConnectHelperV2();
-
     chainName = MyHomePage.walletConnectHelper.chain.chainId.split(':')[0];
     walletAddress = (MyHomePage.walletConnectHelper.sessionData
-                ?.namespaces[chainName]?.accounts.first ??
-            "")
+        ?.namespaces[chainName]?.accounts.first ??
+        "")
         .split(":")
         .last;
+    // setState(() {
+    //   isLoading = walletAddress != null; // Nếu có địa chỉ ví => true, ngược lại false
+    // });
+  }
+  @override
+  void initState() {
+    checkDataAddressWallet;
     super.initState();
   }
 
@@ -76,23 +82,32 @@ class _MyHomePageState extends State<MyHomePage> {
               'Connected Wallet Address is \n ${(walletAddress != null) ? walletAddress : "null"}',
               textAlign: TextAlign.center,
             ),
+
             const SizedBox(height: 20),
-            TextButton(
+            walletAddress == null
+                ? TextButton(
               style: ButtonStyle(
                 backgroundColor: MaterialStateProperty.all<Color>(
                     Colors.blue.withOpacity(0.12)),
                 foregroundColor: MaterialStateProperty.all<Color>(Colors.blue),
-                overlayColor: MaterialStateProperty.resolveWith<Color?>(
-                  (Set<MaterialState> states) {
-                    return Colors.blue.withOpacity(0.12);
-                  },
-                ),
               ),
               onPressed: () {
                 connectWallet();
               },
               child: const Text('Connect to Wallet'),
+            )
+                : TextButton(
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all<Color>(
+                    Colors.red.withOpacity(0.12)),
+                foregroundColor: MaterialStateProperty.all<Color>(Colors.red),
+              ),
+              onPressed: () {
+                disconnectWallet();
+              },
+              child: const Text('Disconnect Wallet'),
             ),
+
             const SizedBox(height: 20),
             if (walletAddress != null)
               TextButton(
@@ -127,4 +142,12 @@ class _MyHomePageState extends State<MyHomePage> {
       }
     });
   }
+  void disconnectWallet() async {
+    await MyHomePage.walletConnectHelper.disconnect(); // Gọi hàm ngắt kết nối của WalletConnect
+    setState(() {
+      walletAddress = null;
+    });
+    debugPrint("Wallet Disconnected");
+  }
+
 }

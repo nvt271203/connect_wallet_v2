@@ -36,7 +36,7 @@ class WalletConnectHelperV2 {
     web3App = await Web3App.createInstance(
       projectId: 'b0d8a911a49ac8f8eb25a9513a316751',
       metadata: const PairingMetadata(
-        name: 'Magic Shoes',
+        name: 'Ercommerce Dapp',
         description: 'Magic shoes web3App mobile app',
         url: 'https://www.magicclub.io/',
         icons: [
@@ -161,4 +161,30 @@ class WalletConnectHelperV2 {
       throw 'Failure - Could not open URL $uri.';
     }
   }
+
+
+  Future<void> disconnect() async {
+    if (sessionData != null) {
+      try {
+        await web3App?.disconnectSession(
+          topic: sessionData!.topic,
+          reason: WalletConnectError(
+            code: 6000, // Mã lỗi tuỳ chỉnh, bạn có thể đặt mã khác
+            message: "User disconnected the wallet",
+          ),
+        );
+        sessionData = null; // Xóa dữ liệu phiên kết nối
+        await Preference.shared.remove(Preference.sessionData); // Xóa dữ liệu lưu trữ
+
+        debugPrint("Wallet disconnected successfully");
+      } catch (e) {
+        debugPrint("Error disconnecting wallet: $e");
+      }
+    } else {
+      debugPrint("No active wallet connection to disconnect.");
+    }
+  }
+
+
+
 }
